@@ -16,9 +16,19 @@ class Booking extends Model
     protected $fillable = [
         'ical_source_id',
         'ical_uid',
+        'booked_at',
+        'holidu_booking_id',
+        'holidu_channel',
         'check_in',
         'check_out',
         'number_of_guests',
+        'paid_by_guest',
+        'home_owner_payout',
+        'channel_commission',
+        'bookiply_commission',
+        'bookiply_processing_markup',
+        'cedolare_secca',
+        'vat',
         'guest_name',
         'guest_surname',
         'guest_email',
@@ -35,8 +45,16 @@ class Booking extends Model
     ];
 
     protected $casts = [
+        'booked_at' => 'datetime',
         'check_in' => 'date',
         'check_out' => 'date',
+        'paid_by_guest' => 'decimal:2',
+        'home_owner_payout' => 'decimal:2',
+        'channel_commission' => 'decimal:2',
+        'bookiply_commission' => 'decimal:2',
+        'bookiply_processing_markup' => 'decimal:2',
+        'cedolare_secca' => 'decimal:2',
+        'vat' => 'decimal:2',
         'checkin_completed_at' => 'datetime',
         'checkin_link_expires_at' => 'datetime',
         'sent_to_alloggiatiweb_at' => 'datetime',
@@ -106,8 +124,9 @@ class Booking extends Model
     public function generateCheckinToken(): string
     {
         $this->checkin_token = Str::random(64);
-        // Scade il giorno dopo il check-in alle 23:59
-        $this->checkin_link_expires_at = $this->check_in->copy()->addDay()->endOfDay();
+        $this->checkin_link_expires_at = now()->addDays(
+            (int) Setting::get('checkin_link_expiry_days', 30)
+        );
         $this->save();
         
         return $this->checkin_token;

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -r \":*)",
+      "Bash(unzip -p holidu-hosts-bookings-export.xlsx xl/sharedStrings.xml)",
+      "Bash(unzip -p holidu-hosts-bookings-export.xlsx xl/worksheets/sheet1.xml)",
+      "Bash(composer require phpoffice/phpspreadsheet)",
+      "Bash(docker exec bt_laravel_app composer require phpoffice/phpspreadsheet)",
+      "Bash(docker exec bt_laravel_app php artisan migrate)",
+      "Bash(docker exec bt_laravel_app php artisan migrate:status)"
+    ]
+  }
+}

@@ -58,6 +58,68 @@
                 </div>
             </div>
 
+            <!-- Dati Finanziari -->
+            @if($booking->paid_by_guest !== null)
+            <div class="card mb-4">
+                <div class="card-header"><i class="bi bi-cash-stack me-2"></i>Dati Finanziari</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Pagato dall'ospite</label>
+                            <div class="fw-bold">€ {{ number_format($booking->paid_by_guest, 2, ',', '.') }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Pagato al proprietario (Payout)</label>
+                            <div class="fw-bold">€ {{ number_format($booking->home_owner_payout, 2, ',', '.') }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Commissione OTA</label>
+                            <div>€ {{ number_format($booking->channel_commission, 2, ',', '.') }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Commissione Holidu (Bookiply)</label>
+                            <div>€ {{ number_format($booking->bookiply_commission, 2, ',', '.') }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Spese gestione Holidu (Processing Markup)</label>
+                            <div>€ {{ number_format($booking->bookiply_processing_markup, 2, ',', '.') }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">IVA</label>
+                            <div>€ {{ number_format($booking->vat, 2, ',', '.') }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Cedolare Secca</label>
+                            @php
+                                $cedolareAtteso = round($booking->paid_by_guest * 0.21, 2);
+                                $cedolareOk     = abs($booking->cedolare_secca - $cedolareAtteso) <= 0.10;
+                            @endphp
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold">€ {{ number_format($booking->cedolare_secca, 2, ',', '.') }}</span>
+                                @if($cedolareOk)
+                                    <span class="badge bg-success" title="Cedolare secca corretta (21%)">
+                                        <i class="bi bi-check-lg"></i> 21%
+                                    </span>
+                                @else
+                                    <span class="badge bg-warning text-dark"
+                                          title="Valore atteso: € {{ number_format($cedolareAtteso, 2, ',', '.') }}">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        atteso € {{ number_format($cedolareAtteso, 2, ',', '.') }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                        @if($booking->holidu_channel)
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Canale</label>
+                            <div>{{ $booking->holidu_channel }}</div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Ospiti registrati -->
             <div class="card mb-4">
                 <div class="card-header"><i class="bi bi-people me-2"></i>Ospiti Registrati ({{ $booking->guests->count() }})</div>

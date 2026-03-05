@@ -105,11 +105,12 @@ class IcalSyncService
     protected function processEvent($event, IcalSource $source): string
     {
         $uid = (string) $event->UID;
-        $summary = (string) ($event->SUMMARY ?? '');
+        $summary = trim((string) ($event->SUMMARY ?? ''));
         $description = (string) ($event->DESCRIPTION ?? '');
-        
+
         $checkIn = $event->DTSTART->getDateTime();
         $checkOut = $event->DTEND ? $event->DTEND->getDateTime() : null;
+        $bookedAt = $event->DTSTAMP ? $event->DTSTAMP->getDateTime() : null;
 
         // Ignora eventi passati
         if ($checkIn < now()->startOfDay()) {
@@ -118,34 +119,24 @@ class IcalSyncService
 
         $booking = Booking::where('ical_uid', $uid)->first();
 
+        // Estrai nome e cognome dal summary (formato Holidu: "Nome Cognome")
+        $nameParts = preg_split('/\s+/', $summary, 2);
+        $guestName = $nameParts[0] ?? null;
+        $guestSurname = $nameParts[1] ?? null;
+
         $data = [
             'ical_source_id' => $source->id,
             'ical_uid' => $uid,
+            'booked_at' => $bookedAt,
             'check_in' => $checkIn,
             'check_out' => $checkOut,
+            'guest_name' => $guestName,
+            'guest_surname' => $guestSurname,
             'ical_raw_data' => [
                 'summary' => $summary,
                 'description' => $description,
             ],
         ];
-
-        // Estrai nome e cognome dal summary
-        $guestInfo = $this->extractGuestName($summary, $description);
-        if ($guestInfo['name']) {
-            $data['guest_name'] = $guestInfo['name'];
-        }
-        if ($guestInfo['surname']) {
-            $data['guest_surname'] = $guestInfo['surname'];
-        }
-        if ($guestInfo['email']) {
-            $data['guest_email'] = $guestInfo['email'];
-        }
-        if ($guestInfo['phone']) {
-            $data['guest_phone'] = $guestInfo['phone'];
-        }
-        if ($guestInfo['guests_count']) {
-            $data['number_of_guests'] = $guestInfo['guests_count'];
-        }
 
         if ($booking) {
             if ($booking->status === 'incomplete') {
@@ -158,82 +149,6 @@ class IcalSyncService
         $data['status'] = 'incomplete';
         Booking::create($data);
         return 'created';
-    }
-
-    /**
-     * Estrae nome, cognome e altre info dal summary/description iCal
-     */
-    protected function extractGuestName(string $summary, string $description): array
-    {
-        $result = [
-            'name' => null,
-            'surname' => null,
-            'email' => null,
-            'phone' => null,
-            'guests_count' => null,
-        ];
-
-        // Pattern per estrarre il nome dal summary
-        // Formati comuni:
-        // - "Mario Rossi - Booking.com"
-        // - "CLOSED - Mario Rossi"
-        // - "Reserved - Mario Rossi (Airbnb)"
-        // - "Mario Rossi"
-        // - "Booking.com: Mario Rossi"
-        
-        $patterns = [
-            // "Nome Cognome - Booking.com" o "Nome Cognome - Airbnb"
-            '/^([A-Za-zÀ-ÿ]+)\s+([A-Za-zÀ-ÿ]+)\s*[-–]\s*(?:Booking|Airbnb|VRBO|Expedia|Hotels)/iu',
-            
-            // "CLOSED - Nome Cognome" o "Reserved - Nome Cognome"
-            '/^(?:CLOSED|Reserved|Blocked|Not available)\s*[-–]\s*([A-Za-zÀ-ÿ]+)\s+([A-Za-zÀ-ÿ]+)/iu',
-            
-            // "Booking.com: Nome Cognome"
-            '/^(?:Booking\.com|Airbnb|VRBO):\s*([A-Za-zÀ-ÿ]+)\s+([A-Za-zÀ-ÿ]+)/iu',
-            
-            // "Nome Cognome (qualcosa)"
-            '/^([A-Za-zÀ-ÿ]+)\s+([A-Za-zÀ-ÿ]+)\s*\(/iu',
-            
-            // Solo "Nome Cognome" (almeno 2 parole)
-            '/^([A-Za-zÀ-ÿ]+)\s+([A-Za-zÀ-ÿ]+)$/iu',
-            
-            // "Nome Cognome" all'inizio seguito da qualsiasi cosa
-            '/^([A-Za-zÀ-ÿ]+)\s+([A-Za-zÀ-ÿ]+)\s+/iu',
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, trim($summary), $matches)) {
-                $result['name'] = ucfirst(strtolower(trim($matches[1])));
-                $result['surname'] = ucfirst(strtolower(trim($matches[2])));
-                break;
-            }
-        }
-
-        // Se non trovato nel summary, cerca nella description
-        if (!$result['name'] && $description) {
-            // Cerca "Guest: Nome Cognome" o "Name: Nome Cognome"
-            if (preg_match('/(?:Guest|Name|Nome|Ospite):\s*([A-Za-zÀ-ÿ]+)\s+([A-Za-zÀ-ÿ]+)/iu', $description, $matches)) {
-                $result['name'] = ucfirst(strtolower(trim($matches[1])));
-                $result['surname'] = ucfirst(strtolower(trim($matches[2])));
-            }
-        }
-
-        // Estrai email dalla description
-        if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i', $description, $matches)) {
-            $result['email'] = strtolower($matches[0]);
-        }
-
-        // Estrai telefono dalla description
-        if (preg_match('/(?:Tel|Phone|Mobile|Cell|Telefono)[\s.:]*([+]?[\d\s\-().]{8,20})/i', $description, $matches)) {
-            $result['phone'] = preg_replace('/[^\d+]/', '', $matches[1]);
-        }
-
-        // Estrai numero ospiti
-        if (preg_match('/(\d+)\s*(?:guest|ospit|person|adult|pax)/i', $summary . ' ' . $description, $matches)) {
-            $result['guests_count'] = (int) $matches[1];
-        }
-
-        return $result;
     }
 
     protected function sendNotificationEmail($bookings): void

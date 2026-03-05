@@ -1,12 +1,14 @@
 <?php
 
+use App\Models\Setting;
 use Illuminate\Support\Facades\Schedule;
 
 // Sincronizza iCal ogni 15 minuti
 Schedule::command('ical:sync')->everyFifteenMinutes()->withoutOverlapping();
 
-// Invia ad AlloggiatiWeb alle 06:00 (orario fisso, configurabile dopo)
-Schedule::command('alloggiatiweb:send')->dailyAt('06:00')->withoutOverlapping();
+// Invia ad AlloggiatiWeb all'orario configurato
+$sendTime = Setting::get('send_time', '06:00');
+Schedule::command('alloggiatiweb:send')->dailyAt($sendTime)->withoutOverlapping();
 
 // Pulizia log vecchi (ogni domenica alle 3:00)
 Schedule::call(function () {

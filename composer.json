@@ -8,6 +8,7 @@
         "guzzlehttp/guzzle": "^7.8",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",
+        "phpoffice/phpspreadsheet": "^5.5",
         "sabre/vobject": "^4.5"
     },
     "require-dev": {

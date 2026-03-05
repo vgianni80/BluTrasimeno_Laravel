@@ -1,9 +1,14 @@
 <x-app-layout>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">Prenotazioni</h4>
-        <a href="{{ route('admin.bookings.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-2"></i>Nuova
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.bookings.import') }}" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-2"></i>Importa Excel
+            </a>
+            <a href="{{ route('admin.bookings.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>Nuova
+            </a>
+        </div>
     </div>
 
     <!-- Filtri -->

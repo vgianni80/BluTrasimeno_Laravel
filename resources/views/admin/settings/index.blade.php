@@ -106,16 +106,45 @@
                 <div class="card mb-4">
                     <div class="card-header"><i class="bi bi-gear me-2"></i>Generale</div>
                     <div class="card-body">
-                        {{-- <div class="mb-3">
-                            <label class="form-label">Scadenza Link Check-in (giorni)</label>
-                            <input type="number" name="checkin_link_expiry_days" class="form-control" 
-                                   value="{{ $settings['checkin_link_expiry_days'] ?? 30 }}" min="1" max="365">
-                        </div> --}}
+                        <div class="mb-3">
+                            <label class="form-label">Numero Massimo Ospiti</label>
+                            <input type="number" name="max_guests" class="form-control" 
+                                   value="{{ $settings['max_guests'] ?? 6 }}" min="1" max="20">
+                        </div>
                         <div class="mb-0">
                             <label class="form-label">Orario Invio AlloggiatiWeb</label>
                             <input type="time" name="send_time" class="form-control" 
                                    value="{{ $settings['send_time'] ?? '06:00' }}">
                         </div>
+                    </div>
+                </div>
+
+                <!-- Export iCal -->
+                <div class="card mb-4">
+                    <div class="card-header"><i class="bi bi-calendar-event me-2"></i>Calendario iCal (Export)</div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Usa questo URL per sincronizzare le tue prenotazioni con <strong>Holidu</strong>, Booking.com, Airbnb e altri portali.
+                        </div>
+                        
+                        <label class="form-label">URL Calendario iCal</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="icalExportUrl" 
+                                   value="{{ url('/calendar/export.ics') }}" readonly>
+                            <button type="button" class="btn btn-outline-primary" onclick="copyIcalUrl()">
+                                <i class="bi bi-clipboard"></i> Copia
+                            </button>
+                        </div>
+                        <small class="text-muted">
+                            Questo URL mostra tutte le date occupate. Incollalo in Holidu per bloccare automaticamente le date.
+                        </small>
+                        
+                        <hr>
+                        
+                        <a href="{{ url('/calendar/export.ics') }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-eye me-2"></i>Anteprima Calendario
+                        </a>
                     </div>
                 </div>
             </div>
@@ -125,4 +154,13 @@
             <i class="bi bi-check-lg me-2"></i>Salva Impostazioni
         </button>
     </form>
+
+    <script>
+    function copyIcalUrl() {
+        const url = document.getElementById('icalExportUrl');
+        url.select();
+        document.execCommand('copy');
+        alert('URL copiato negli appunti!');
+    }
+    </script>
 </x-app-layout>

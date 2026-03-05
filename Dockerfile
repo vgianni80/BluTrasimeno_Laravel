@@ -17,7 +17,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+# Copy application
+COPY . .
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader || true
+
+# Permissions
+RUN chmod -R 775 storage bootstrap/cache
+
 EXPOSE 8000
 
-# Non eseguire artisan serve subito - aspetta che vendor esista
-CMD if [ -d "vendor" ]; then php artisan serve --host=0.0.0.0 --port=8000; else echo "Run 'composer install' first" && tail -f /dev/null; fi
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
