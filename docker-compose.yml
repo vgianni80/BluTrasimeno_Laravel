@@ -31,5 +31,17 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  phpmyadmin:
+    container_name: bt_phpmyadmin
+    image: phpmyadmin:latest
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: laravel_user
+      PMA_PASSWORD: laravel_password
+    depends_on:
+      - db
+
 volumes:
   mysql_data:
