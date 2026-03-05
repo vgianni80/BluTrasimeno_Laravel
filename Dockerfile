@@ -28,4 +28,6 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Non eseguire artisan serve subito - aspetta che vendor esista
+CMD if [ -d "vendor" ]; then php artisan serve --host=0.0.0.0 --port=8000; else echo "Run 'composer install' first" && tail -f /dev/null; fi
